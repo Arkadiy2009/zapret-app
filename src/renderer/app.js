@@ -210,7 +210,8 @@ function catResults() {
   const q = U.q.trim().toLowerCase();
   if (!q) {
     return `<h3>Игры</h3>${S.catalog.filter(c => c.group === 'game').map(catCard).join('')}<h3>Сервисы и сайты</h3>${S.catalog.filter(c => c.group === 'web').map(catCard).join('')}
-      <p class="muted small">Списки собраны из советов пользователей запрета. Работа не гарантируется: всё зависит от провайдера.</p>`;
+      <p class="muted small">Списки собраны из советов пользователей запрета. Работа не гарантируется: всё зависит от провайдера.</p>
+      <div class="set-row wish"><div><b>Нет вашей игры или сервиса?</b><small>Напишите, что добавить, или проголосуйте за чужое пожелание</small></div><button class="btn small" data-act="wish">Предложить</button></div>`;
   }
   const out = [];
   const special = S.special.find(a => a.match.some(m => q.includes(m)));
@@ -219,7 +220,7 @@ function catResults() {
   if (/^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/.*)?$/i.test(q)) {
     out.push(`<article class="res" id="res-site"><span class="res-art">${art('site', q.replace(/^https?:\/\//, '')[0])}</span><div class="res-txt"><b>${esc(q)}</b><small>Сайт</small><ul><li>Добавим в ваш личный список, поддомены учтутся сами</li></ul></div><button class="btn primary" data-act="addDomain" data-v="${esc(q)}">Добавить сайт</button></article>`);
   }
-  if (!out.length) out.push(`<div class="empty"><b>Не нашли «${esc(U.q)}»</b><p>Введите адрес сайта, например example.com, и мы добавим его в ваш список.</p></div>`);
+  if (!out.length) out.push(`<div class="empty"><b>Не нашли «${esc(U.q)}»</b><p>Введите адрес сайта, например example.com, и мы добавим его в ваш список. Или <button class="link" data-act="wish">предложите это для каталога</button>.</p></div>`);
   return out.join('');
 }
 function pageCatalog() {
@@ -525,6 +526,7 @@ const A = {
   updateAll: () => call('updateAll'),
   openLog: () => api.win('log'),
   donate: () => api.win('donate'),
+  wish: () => api.win('wish'),
   toggle: v => call('toggle', v),
   set: (v, el) => call('set', el.dataset.k, v),
   obBack: () => { U.step--; paint(); },

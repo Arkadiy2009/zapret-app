@@ -13,6 +13,7 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 const log = e => { try { fs.appendFileSync(LOG_FILE, `${new Date().toISOString()} ${e && e.stack || e}\n`); } catch { /* журнал не критичен */ } };
 
 const DONATE_URL = 'https://www.donationalerts.com/r/dOne';
+const WISH_URL = 'https://github.com/Arkadiy2009/zapret-app/discussions/1';
 let win = null, tray = null, ctrl = null, quitting = false;
 const trayIcon = name => nativeImage.createFromPath(path.join(ROOT, 'src', 'renderer', 'img', name));
 
@@ -63,6 +64,7 @@ function bindIpc() {
     if (what === 'hide') win.hide();
     if (what === 'log') shell.showItemInFolder(LOG_FILE);
     if (what === 'donate') shell.openExternal(DONATE_URL);
+    if (what === 'wish') shell.openExternal(WISH_URL);
   });
 }
 
