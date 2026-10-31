@@ -115,7 +115,7 @@ npm run dist   # dist/zapret-setup-<версия>.exe
 - [bol-van/zapret](https://github.com/bol-van/zapret): `winws`, основа всего
 - [basil00/WinDivert](https://github.com/basil00/WinDivert): драйвер перехвата пакетов
 
-Лицензии сторонних компонентов перечислены в [THIRD-PARTY.txt](resources/THIRD-PARTY.txt). Приложение распространяется по лицензии [MIT](LICENSE). Пользуйтесь им в рамках законов своей страны.
+Лицензии сторонних компонентов перечислены в [THIRD-PARTY.txt](resources/THIRD-PARTY.txt). Приложение распространяется по лицензии [MIT](LICENSE), логотипы и названия игр и сервисов принадлежат их владельцам и в неё не входят. Пользуйтесь им в рамках законов своей страны.
 
 ---
 

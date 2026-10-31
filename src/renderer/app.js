@@ -28,37 +28,11 @@ const ic = {
 };
 const icon = (n, s = 20) => `<svg class="ic" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ic[n]}</svg>`;
 
-const ART = {
-  war: ['#f0b04a', '#8c5219', '#241204'], cube: ['#b9c7d6', '#55677a', '#141c26'], steam: ['#66c0f4', '#1b2838', '#0b1420'], epic: ['#8a8f98', '#2a2c31', '#0d0e11'],
-  riot: ['#ff5a5f', '#b3122a', '#30060e'], blue: ['#5aa9ff', '#1b5fb8', '#0a1d3f'], mine: ['#7bc96f', '#3f7d3a', '#14290f'], orange: ['#ffb057', '#d9681d', '#3b1605'],
-  twitch: ['#b18cff', '#6c35d9', '#1f0c4a'], x: ['#8f97a3', '#272a30', '#08090b'], insta: ['#ffb347', '#e1306c', '#5b1a9e'], fb: ['#6ea8ff', '#1f5fd6', '#0a2257'],
-  gpt: ['#5be3b9', '#128a6c', '#05302a'], git: ['#a4b1c2', '#3c4757', '#10151c'], yellow: ['#ffe27a', '#d9a521', '#3b2b05'], site: ['#7c8ca3', '#3a4759', '#121924'],
-};
-let artN = 0;
-function art(kind, letter) {
-  const id = `a${kind}${++artN % 40}`;
-  const grad = (c1, c2, c3) => `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}"/><stop offset=".55" stop-color="${c2}"/><stop offset="1" stop-color="${c3}"/></linearGradient></defs><rect width="400" height="400" fill="url(#${id})"/>`;
-  let body = '';
-  if (kind === 'yt') {
-    body = grad('#ff5a4f', '#c9142b', '#4a0614');
-    for (let i = 0; i < 6; i++) { const s = 340 - i * 52; body += `<path d="M${70 + i * 34} ${200 - s / 2}L${70 + i * 34 + s * .86} 200L${70 + i * 34} ${200 + s / 2}Z" fill="#fff" opacity="${.05 + i * .035}"/>`; }
-    body += '<path d="M150 130L275 200L150 270Z" fill="#fff"/>';
-  } else if (kind === 'dc') {
-    body = grad('#8f9bff', '#4a4fd6', '#17143f');
-    for (let i = 1; i < 8; i++) body += `<circle cx="200" cy="205" r="${i * 42}" fill="none" stroke="#fff" stroke-width="${7 - i * .7}" opacity="${.42 - i * .05}"/>`;
-    body += '<path d="M125 220v-22a75 75 0 0 1 150 0v22" fill="none" stroke="#fff" stroke-width="15" stroke-linecap="round"/><rect x="104" y="205" width="40" height="66" rx="16" fill="#fff"/><rect x="256" y="205" width="40" height="66" rx="16" fill="#fff"/>';
-  } else if (kind === 'war') {
-    body = grad(...ART.war);
-    for (let i = 0; i < 9; i++) body += `<path d="M-20 ${60 + i * 44}C 90 ${10 + i * 44}, 170 ${130 + i * 40}, 420 ${40 + i * 42}" fill="none" stroke="#fff" stroke-width="3" opacity=".2"/>`;
-    body += '<circle cx="200" cy="200" r="104" fill="none" stroke="#fff" stroke-width="12"/><circle cx="200" cy="200" r="16" fill="#fff"/><path d="M200 60v84M200 256v84M60 200h84M256 200h84" stroke="#fff" stroke-width="12" stroke-linecap="round"/>';
-  } else if (kind === 'cube') {
-    body = grad(...ART.cube);
-    body += '<g transform="rotate(14 200 200)"><rect x="82" y="82" width="236" height="236" rx="24" fill="#fff" opacity=".12"/><rect x="118" y="118" width="164" height="164" rx="14" fill="#fff"/><rect x="176" y="176" width="48" height="48" rx="6" fill="#55677a"/></g>';
-  } else {
-    body = grad(...(ART[kind] || ART.site));
-    body += `<text x="200" y="262" font-size="190" font-weight="800" text-anchor="middle" fill="#fff" font-family="Onest, Arial, sans-serif">${esc((letter || '?').toUpperCase())}</text>`;
-  }
-  return `<svg class="art" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">${body}</svg>`;
+function art(kind, letter, wide) {
+  if (kind === 'wardogs') return `<img class="art" src="img/wardogs-${wide ? 'wide' : 'square'}.jpg" alt="" draggable="false">`;
+  const brand = BRANDS[kind];
+  if (brand) return `<span class="art art-brand" style="background:${brand.bg}">${brand.svg}</span>`;
+  return `<span class="art art-brand" style="background:linear-gradient(135deg,#55647a,#232c3a)"><b>${esc((letter || '?').toUpperCase())}</b></span>`;
 }
 
 let S = null;
@@ -164,7 +138,7 @@ function targetCard(t) {
   const s = targetState(t);
   return `<article class="t-card ${t.on ? 'on' : ''}" id="card-${esc(t.id)}">
     <button class="t-hit" data-act="toggleTarget" data-v="${esc(t.id)}" aria-pressed="${t.on}">
-      <span class="t-art" data-keep>${art(t.art, t.name[0])}</span>
+      <span class="t-art" data-keep>${art(t.art, t.name[0], true)}</span>
       <span class="t-tick">${icon('check', 16)}</span>
       <span class="t-body"><b>${esc(t.name)}</b><small>${esc(t.sub)}</small><em class="st ${s.cls}"><i></i>${s.text}</em></span>
     </button>
@@ -486,7 +460,7 @@ function paint() {
 }
 
 function render(pageChange) {
-  if (pageChange && document.startViewTransition && S.motion) {
+  if (pageChange && document.startViewTransition && S.motion && !document.hidden) {
     $('#view').scrollTop = 0;
     document.startViewTransition(paint);
   } else paint();
