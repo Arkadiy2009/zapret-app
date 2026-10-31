@@ -1,0 +1,83 @@
+{
+  "name": "zapret-app",
+  "productName": "zapret",
+  "version": "1.1.0",
+  "coreVersion": "1.10.4",
+  "zapretRepo": "Arkadiy2009/zapret-app",
+  "repository": "github:Arkadiy2009/zapret-app",
+  "description": "Простой интерфейс для zapret-discord-youtube",
+  "author": "dOne",
+  "license": "MIT",
+  "main": "src/main/main.js",
+  "scripts": {
+    "core": "node scripts/sync-core.js",
+    "dev": "electron . --mock",
+    "test": "node --test test/*.test.js",
+    "dist": "npm run core && npm test && electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "puppeteer-core": "^23.11.1"
+  },
+  "dependencies": {
+    "@fontsource-variable/onest": "^5.3.1",
+    "@fontsource/tektur": "^5.3.0",
+    "morphdom": "^2.7.8"
+  },
+  "build": {
+    "appId": "app.zapret.gui",
+    "productName": "zapret",
+    "copyright": "zapret-app",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "package.json",
+      "!src/main/mock.js"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/core",
+        "to": "core",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "resources/THIRD-PARTY.txt",
+        "to": "THIRD-PARTY.txt"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico",
+      "requestedExecutionLevel": "requireAdministrator",
+      "executableName": "zapret"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": true,
+      "runAfterFinish": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "zapret",
+      "artifactName": "zapret-setup-${version}.exe",
+      "include": "build/installer.nsh",
+      "installerLanguages": [
+        "ru_RU"
+      ],
+      "language": "1049",
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}

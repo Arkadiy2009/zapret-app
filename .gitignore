@@ -1,0 +1,14 @@
+node_modules/
+dist/
+resources/core/
+*.log
+.env*
+.vscode/
+.idea/
+.claude/
+*.pem
+*.pfx
+*.p12
+*.key
+Thumbs.db
+desktop.ini

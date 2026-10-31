@@ -1,0 +1,29 @@
+# Тег v1.2.3 собирает установщик из исходников и выкладывает его в релиз.
+# Приложения находят новую версию через API релизов и сверяют сумму файла.
+name: release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run dist
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Publish
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/zapret-setup-*.exe --title "zapret $GITHUB_REF_NAME" --generate-notes

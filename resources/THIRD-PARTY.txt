@@ -1,0 +1,16 @@
+zapret (приложение) - неофициальная оболочка над zapret-discord-youtube.
+
+Внутри приложения без изменений лежит:
+- zapret-discord-youtube, Flowseal и bol-van, лицензия MIT (core/LICENSE.txt)
+  https://github.com/Flowseal/zapret-discord-youtube
+- winws из zapret, bol-van, лицензия MIT
+  https://github.com/bol-van/zapret
+- WinDivert, basil00, лицензия LGPLv3 или GPLv2
+  https://github.com/basil00/WinDivert
+- cygwin1.dll, Cygwin, лицензия LGPLv3 или новее
+  https://cygwin.com
+
+Интерфейс использует:
+- Electron, лицензия MIT
+- morphdom, лицензия MIT
+- шрифты Onest и Tektur, лицензия SIL Open Font License 1.1

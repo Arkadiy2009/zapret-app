@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<title>zapret</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="win" id="win">
+  <canvas id="fx" aria-hidden="true"></canvas>
+  <div class="titlebar">
+    <div class="brand"><svg width="24" height="21" viewBox="44 56 168 144" aria-hidden="true"><defs><linearGradient id="brand-beam" gradientUnits="userSpaceOnUse" x1="68" y1="200" x2="188" y2="56"><stop offset="0" stop-color="#1f7dff"/><stop offset="1" stop-color="#2ae3ff"/></linearGradient></defs><polygon points="64,56 152,56 123.7,90 52,90 52,68" fill="currentColor"/><polygon points="192,200 104,200 132.3,166 204,166 204,188" fill="currentColor"/><polygon points="164,56 212,56 92,200 44,200" fill="url(#brand-beam)"/></svg><span>zapret</span></div>
+    <span class="pill" id="title-state"></span>
+    <div class="win-btns">
+      <button data-win="min" aria-label="Свернуть"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1 6h10" stroke="currentColor" stroke-width="1.4"/></svg></button>
+      <button data-win="hide" aria-label="Закрыть в трей"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M1.5 1.5l9 9m0-9l-9 9" stroke="currentColor" stroke-width="1.4"/></svg></button>
+    </div>
+  </div>
+  <nav class="nav" id="nav" aria-label="Разделы"></nav>
+  <main class="view" id="view"></main>
+  <div class="overlay" id="overlay"></div>
+  <div class="toast" id="toast" role="status"></div>
+</div>
+<script src="vendor/morphdom-umd.min.js"></script>
+<script src="data.js"></script>
+<script src="fx.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
