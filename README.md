@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Arkadiy2009/zapret-app/releases/latest"><img src="https://img.shields.io/github/v/release/Arkadiy2009/zapret-app?style=flat-square&label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F&color=1f7dff" alt="Версия"></a>
+  <a href="https://github.com/Arkadiy2009/zapret-app/releases/latest"><img src="https://img.shields.io/github/v/release/Arkadiy2009/zapret-app?sort=semver&display_name=tag&style=flat-square&label=%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F&color=1f7dff" alt="Версия"></a>
   <a href="https://github.com/Arkadiy2009/zapret-app/releases"><img src="https://img.shields.io/github/downloads/Arkadiy2009/zapret-app/total?style=flat-square&label=%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B9&color=2ae3ff" alt="Скачивания"></a>
   <img src="https://img.shields.io/badge/Windows-10%20%D0%B8%2011-0b1633?style=flat-square" alt="Windows 10 и 11">
   <a href="LICENSE"><img src="https://img.shields.io/badge/%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-MIT-3fe7b0?style=flat-square" alt="Лицензия MIT"></a>
