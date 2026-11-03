@@ -333,7 +333,7 @@ function pageSettings() {
         <label for="f-d">Голос в Discord<select id="f-d" data-fake="discord">${S.fakeList.map(f => `<option ${f === S.fakes.discord ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
         <label for="f-g">Игры<select id="f-g" data-fake="game">${S.fakeList.map(f => `<option ${f === S.fakes.game ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
       </details>
-      <div class="set-row"><div><b>Журнал для разработчика</b><small>Если что-то не работает, сохраните его и пришлите вместе с описанием проблемы. Паролей в нём нет</small></div><button class="btn small" data-act="saveLog">Сохранить на рабочий стол</button></div>
+      <div class="set-row"><div><b>Журнал для разработчика</b><small>Если что-то не работает, сохраните его и пришлите вместе с описанием проблемы. Сбор займёт до минуты: проверим ваши цели и определим провайдера через RIPE NCC. Паролей и истории сайтов в журнале нет</small></div><button class="btn small" data-act="saveLog">Сохранить на рабочий стол</button></div>
       <div class="set-row"><div><b>Поддержать приложение</b><small>Я буду очень рад, если вы меня поддержите, люблю всех подписчиков ❤️</small></div><button class="btn small" data-act="donate">Открыть</button></div>
       <div class="set-row danger"><div><b>Удалить обход с компьютера</b><small>Уберём службу и драйвер. Ваши списки останутся</small></div><button class="btn small bad" data-act="askRemove">Удалить</button></div>
     </section>
@@ -499,7 +499,7 @@ const A = {
   askUpdate: () => openOverlay('update'),
   updateAll: () => call('updateAll'),
   openLog: () => api.win('log'),
-  saveLog: async () => { const r = await api.saveLog(); toast(r.file ? `Журнал сохранён: ${r.file.split(/[\\/]/).pop()}` : `Не получилось: ${r.error}`); },
+  saveLog: async () => { toast('Собираем журнал, это займёт до минуты'); const r = await api.saveLog(); toast(r.file ? `Журнал сохранён: ${r.file.split(/[\\/]/).pop()}` : `Не получилось: ${r.error}`); },
   donate: () => api.win('donate'),
   wish: () => api.win('wish'),
   toggle: v => call('toggle', v),

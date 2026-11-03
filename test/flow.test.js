@@ -256,18 +256,37 @@ test('занятая папка обновления не мешает запу�
   }
 });
 
-test('журнал для разработчика: настройки, результаты подбора и записи журнала', async () => {
+test('журнал для разработчика: конфиг, проверка целей, история за час, провайдер', async () => {
   const lines = [];
-  const { c } = await make({ perfect: true });
+  const stuck = [{ ip: '203.0.113.50', port: '443', pid: 10, proc: 'WARDOGS.exe' }];
+  const { c, engine } = await make({ perfect: true, stuck });
   c.log = m => lines.push(String(m));
   await c.startScan({});
   c.addCatalog('wardogs');
-  const { buildReport } = require('../src/main/report');
-  const text = buildReport({ snap: c.snapshot(), service: 'running', logText: lines.join('\n') });
-  assert.match(text, /Приложение: 0\.0\.0, запрет: 1\.10\.4/);
-  assert.match(text, /Каталог: wardogs/);
-  assert.match(text, /Режим для игр: all/);
-  assert.match(text, /YouTube \(отмечено, отвечают 12 из 12\)/);
-  assert.match(text, /Подключено: general/);
+  await c.connectWith(c.d.strategy);
+  await c.healthTick();
+  await c.sampleStuck();
+  const { collect, buildReport } = require('../src/main/report');
+  const deps = { serviceImage: engine.serviceImage, network: engine.network, provider: engine.provider, stuck: engine.stuckConnections, resolve: engine.resolve, probeDetail: engine.probeDetail };
+  const text = buildReport(await collect({ ctrl: c, deps, logText: lines.join('\n') }));
+  assert.match(text, /Приложение 0\.0\.0, запрет 1\.10\.4/);
+  assert.match(text, /Провайдер: Тестовый провайдер, AS64500, сеть 198\.51\.100\.0\/24/);
+  assert.match(text, /wardogs https:\/\/live\.wardogs\.bulkhead\.pragmaengine\.com/);
+  assert.match(text, /TLS1\.3 {2}ОК, HTTP 200/);
+  assert.match(text, /live\.wardogs\.bulkhead\.pragmaengine\.com: 203\.0\.113\.10/);
+  assert.match(text, /wardogs: отвечают \d+ из \d+/);
+  assert.match(text, /WARDOGS\.exe → 203\.0\.113\.50:443: 2 раз/);
+  assert.match(text, /list-general-user\.txt: live\.wardogs\.bulkhead\.pragmaengine\.com, firstlook\.gg, api\.epicgames\.dev/);
+  assert.match(text, /game_filter\.enabled: mode=all, tcp=1024-65535, udp=1024-65535/);
+  assert.match(text, /Команда службы: "C:\\ProgramData/);
+  assert.match(text, /"catalog": \[\s+"wardogs"/);
   assert.match(text, /Подбор: проверено 1, лучший general/);
+});
+
+test('журнал: VPN помечается, чтобы не принять его сервер за провайдера', async () => {
+  const { c, engine } = await make({ perfect: true });
+  const { collect, buildReport } = require('../src/main/report');
+  const deps = { serviceImage: engine.serviceImage, network: async () => ({ vpn: ['MyVPN'], adapters: [], dns: [] }), provider: engine.provider, stuck: async () => [], resolve: engine.resolve, probeDetail: engine.probeDetail };
+  const text = buildReport(await collect({ ctrl: c, deps, logText: '' }));
+  assert.match(text, /ВНИМАНИЕ: включён VPN \(MyVPN\)/);
 });

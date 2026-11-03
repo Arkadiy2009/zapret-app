@@ -3,7 +3,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const { Controller } = require('./controller');
-const { buildReport } = require('./report');
+const { collect, buildReport } = require('./report');
+const insight = require('./insight');
 
 const MOCK = !app.isPackaged && process.argv.includes('--mock');
 const ROOT = path.join(__dirname, '..', '..');
@@ -24,8 +25,11 @@ const log = e => {
 async function saveReport() {
   const read = f => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
   const logText = (read(`${LOG_FILE}.old`) + read(LOG_FILE)).split('\n').slice(-400).join('\n');
-  const service = await ctrl.engine.serviceState().catch(() => 'неизвестно');
-  const text = buildReport({ snap: ctrl.snapshot(), service, logText });
+  const e = ctrl.engine;
+  const deps = MOCK
+    ? { serviceImage: e.serviceImage, network: e.network, provider: e.provider, stuck: e.stuckConnections, resolve: e.resolve, probeDetail: e.probeDetail }
+    : { serviceImage: e.serviceImage, network: insight.network, provider: () => insight.provider(), stuck: insight.stuckConnections, resolve: insight.resolve, probeDetail: insight.probeDetail };
+  const text = buildReport(await collect({ ctrl, deps, logText }));
   const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
   const name = `zapret-журнал-${stamp}.txt`;
   let file = null;

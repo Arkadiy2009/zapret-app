@@ -21,6 +21,12 @@ function createMockEngine({ scenario = {} } = {}) {
     removeService: async () => { s.service = 'none'; s.winws = false; },
     installedStrategy: async () => s.base || null,
     installedCoreDir: async () => s.coreDir || null,
+    serviceImage: async () => (s.service === 'none' ? 'службы нет' : `"C:\\ProgramData\\zapret\\core\\1.10.4\\bin\\winws.exe" ${s.base}`),
+    stuckConnections: async () => scenario.stuck || [],
+    probeDetail: async (url, proto) => ({ proto, code: scenario.perfect ? 0 : 28, http: scenario.perfect ? '200' : '000', time: 0.12, ip: '203.0.113.10', err: scenario.perfect ? '' : 'Connection timed out' }),
+    resolve: async () => ['203.0.113.10'],
+    provider: async () => ({ asn: 'AS64500', holder: 'Тестовый провайдер', network: '198.51.100.0/24' }),
+    network: async () => ({ adapters: ['Ethernet (Тестовый адаптер)'], dns: ['Ethernet: 192.168.1.1'], proxy: 'выключен', windows: 'Windows 11 Pro 10.0.26300', vpn: [] }),
     startRaw: (exe, args) => { s.current = args.join(' '); s.winws = true; return { kill() {} }; },
     waitWinws: async () => { await sleep(40); return true; },
     probe: async (url, proto) => {

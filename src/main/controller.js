@@ -7,6 +7,7 @@ const { loadStrategies, coreVersion, toBinPath } = require('./strategy');
 const cfg = require('./config');
 const scan = require('./scan');
 const { CATALOG, SPECIAL_ANSWERS } = require('../shared/catalog');
+const { History } = require('./insight');
 
 const HEALTH_MS = 5 * 60 * 1000;
 const DAY = 24 * 60 * 60 * 1000;
@@ -19,6 +20,7 @@ class Controller extends EventEmitter {
     this.coreRoot = path.join(dataDir, 'core');
     fs.mkdirSync(this.coreRoot, { recursive: true });
     this.store = new Store(dataDir);
+    this.history = new History(dataDir);
     this.d = this.store.data;
     this.v = {
       conn: 'off', scan: null, startedAt: 0, lastCheck: 0, banner: null, busy: false, dnsBad: false,
@@ -50,6 +52,7 @@ class Controller extends EventEmitter {
       this.v.banner = { kind: 'warn', text: 'Запущен другой запрет. Нажмите «Подключить», и мы заменим его.' };
     }
     this.timers.push(setInterval(() => this.healthTick().catch(e => this.log(e)), HEALTH_MS));
+    this.timers.push(setInterval(() => this.sampleStuck().catch(e => this.log(e)), 60 * 1000));
     this.timers.push(setInterval(() => this.dailyUpdate(), 60 * 60 * 1000));
     this.dailyUpdate();
     this.push();
@@ -137,7 +140,15 @@ class Controller extends EventEmitter {
   push() { this.emit('state', this.snapshot()); }
   toast(text) { this.emit('toast', text); }
   save() { this.store.save(); this.push(); }
-  chosenIds() { return cfg.scanTargets(this.coreDir, this.d).list.map(t => t.id); }
+  chosenIds() { return this.chosenTargets().map(t => t.id); }
+  chosenTargets() { return cfg.scanTargets(this.coreDir, this.d).list; }
+
+  // Раз в минуту запоминаем соединения, которые повисли без ответа: так видно, куда игра не может достучаться
+  async sampleStuck() {
+    if (!this.engine.stuckConnections) return;
+    const list = await this.engine.stuckConnections();
+    if (list.length) this.history.stuck(list);
+  }
 
   // Подключение
   async connectWith(file) {
@@ -621,6 +632,7 @@ class Controller extends EventEmitter {
     for (const t of targets) {
       if (prev?.targets?.[t.id] && !prev.targets[t.id].ok) continue;
       const now = await scan.checkUrls(this.engine, t.urls);
+      this.history.check({ id: t.id, ok: now.ok, total: now.total, ssl: now.ssl });
       if (now.ok === 0) { broken = t.id; break; }
     }
     this.v.lastCheck = Date.now();

@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { run, cmd437, ps } = require('./exec');
 const { toBinPath } = require('./strategy');
+const { stuckConnections } = require('./insight');
 
 const SERVICE = 'zapret';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -91,6 +92,13 @@ async function installedCoreDir() {
   const r = await cmd437('reg query "HKLM\\System\\CurrentControlSet\\Services\\zapret" /v ImagePath');
   const m = r.stdout.match(/ImagePath\s+REG_EXPAND_SZ\s+"?(.+?)bin\\winws\.exe/i);
   return m ? m[1] : null;
+}
+
+// Точная команда, с которой работает служба
+async function serviceImage() {
+  const r = await cmd437('reg query "HKLM\\System\\CurrentControlSet\\Services\\zapret" /v ImagePath');
+  const m = r.stdout.match(/ImagePath\s+REG_EXPAND_SZ\s+(.+)/);
+  return m ? m[1].trim() : 'службы нет';
 }
 
 // Запуск способа напрямую, без службы: так работает подбор
@@ -276,6 +284,6 @@ async function addDefenderExclusion(dir) {
 }
 
 module.exports = {
-  DIAG_SCRIPT, serviceState, winwsRunning, killWinws, stopService, tcpEnable, installService, startService, setServiceStart, removeService, installedStrategy, installedCoreDir,
+  DIAG_SCRIPT, serviceState, winwsRunning, killWinws, stopService, tcpEnable, installService, startService, setServiceStart, removeService, installedStrategy, installedCoreDir, serviceImage, stuckConnections,
   secureDir, startRaw, waitWinws, probe, ping, dpiProbe, hasInternet, diagnose, removeConflicts, clearDiscordCache, resetNetwork, flushDns, enableDoh, disableDoh, addDefenderExclusion,
 };

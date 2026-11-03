@@ -234,3 +234,29 @@ test('сборка: страница грузит свои файлы из app.a
   assert.notStrictEqual(fuses.grantFileProtocolExtraPrivileges, false);
   assert.strictEqual(fuses.runAsNode, false);
 });
+
+test('журнал: повисшие соединения из netstat, без внутренних адресов', () => {
+  const ins = require('../src/main/insight');
+  const text = [
+    '  Имя    Локальный адрес        Внешний адрес          Состояние       PID',
+    '  TCP    192.168.1.5:50111      203.0.113.50:443       SYN_SENT        4242',
+    '  TCP    192.168.1.5:50112      192.168.1.1:80         SYN_SENT        4242',
+    '  TCP    192.168.1.5:50113      8.8.8.8:443            ESTABLISHED     11',
+    '  TCP    [2001:db8::5]:50114    [2a00:1450::200e]:443  SYN_SENT        77',
+  ].join('\r\n');
+  assert.deepStrictEqual(ins.parseNetstat(text), [{ ip: '203.0.113.50', port: '443', pid: 4242 }, { ip: '2a00:1450::200e', port: '443', pid: 77 }]);
+  assert.deepStrictEqual(ins.parseTasklist('"WARDOGS.exe","4242","Console","1","1 024 K"\r\n'), { 4242: 'WARDOGS.exe' });
+});
+
+test('журнал: история хранит только последний час', () => {
+  const { History, HOUR } = require('../src/main/insight');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'zhist-'));
+  const h = new History(dir);
+  h.data.checks.push({ t: Date.now() - HOUR - 1000, id: 'old', ok: 0, total: 3 });
+  h.check({ id: 'wardogs', ok: 2, total: 6, ssl: 0 });
+  h.stuck([{ proc: 'WARDOGS.exe', ip: '203.0.113.50', port: '443' }]);
+  h.stuck([{ proc: 'WARDOGS.exe', ip: '203.0.113.50', port: '443' }]);
+  const again = new History(dir).summary();
+  assert.deepStrictEqual(again.checks.map(c => c.id), ['wardogs']);
+  assert.strictEqual(again.stuck[0].n, 2);
+});
