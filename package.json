@@ -1,7 +1,7 @@
 {
   "name": "zapret-app",
   "productName": "zapret",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "coreVersion": "1.10.4",
   "zapretRepo": "Arkadiy2009/zapret-app",
   "repository": "github:Arkadiy2009/zapret-app",
@@ -28,7 +28,6 @@
   "build": {
     "appId": "app.zapret.gui",
     "productName": "zapret",
-    "copyright": "zapret-app",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -51,6 +50,16 @@
         "to": "THIRD-PARTY.txt"
       }
     ],
+    "copyright": "© 2026 dOne",
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "grantFileProtocolExtraPrivileges": false,
+      "enableCookieEncryption": true,
+      "onlyLoadAppFromAsar": true,
+      "enableEmbeddedAsarIntegrityValidation": true
+    },
     "win": {
       "target": [
         {

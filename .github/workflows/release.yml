@@ -1,5 +1,6 @@
 # Тег v1.2.3 собирает установщик из исходников и выкладывает его в релиз.
 # Приложения находят новую версию через API релизов и сверяют сумму файла.
+# Новости релиза берутся из .github/release-notes.md: строки с «- » приложение показывает как список нового.
 name: release
 
 on:
@@ -8,13 +9,15 @@ on:
 
 permissions:
   contents: write
+  id-token: write
+  attestations: write
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24
           cache: npm
@@ -22,8 +25,50 @@ jobs:
       - run: npm run dist
         env:
           GITHUB_TOKEN: ${{ github.token }}
+
+      # Подпись через SignPath включится сама, когда в настройках репозитория появятся
+      # переменная SIGNPATH_ORGANIZATION_ID и секрет SIGNPATH_API_TOKEN
+      - name: Upload unsigned installer
+        id: unsigned
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unsigned
+          path: dist/zapret-setup-*.exe
+      - name: Sign with SignPath
+        if: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+        uses: signpath/github-action-submit-signing-request@c92b958760219087e01f8d67a1669ed57afe2627 # v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: zapret-app
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: dist
+
+      - name: Checksums
+        shell: bash
+        run: cd dist && sha256sum zapret-setup-*.exe > SHA256SUMS.txt && cat SHA256SUMS.txt
+      - name: Build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: dist/zapret-setup-*.exe
       - name: Publish
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" dist/zapret-setup-*.exe --title "zapret $GITHUB_REF_NAME" --generate-notes
+        run: |
+          SUM=$(cut -d' ' -f1 dist/SHA256SUMS.txt)
+          {
+            cat .github/release-notes.md
+            echo
+            echo "### Проверка файла"
+            echo
+            echo "SHA256: \`$SUM\`"
+            echo
+            echo "Установщик собран на GitHub Actions из коммита \`$GITHUB_SHA\`. Происхождение можно проверить командой:"
+            echo
+            echo "\`gh attestation verify zapret-setup-${GITHUB_REF_NAME#v}.exe -R $GITHUB_REPOSITORY\`"
+          } > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/zapret-setup-*.exe dist/SHA256SUMS.txt --title "zapret $GITHUB_REF_NAME" --notes-file notes.md
