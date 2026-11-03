@@ -32,7 +32,8 @@ class Controller extends EventEmitter {
 
   async init() {
     await this.engine.secureDir(this.dataDir).catch(e => this.log(e));
-    fs.rmSync(path.join(this.dataDir, 'update'), { recursive: true, force: true });
+    // Сразу после обновления установщик ещё работает из этой папки, и файл занят. Уберём его в следующий раз
+    try { fs.rmSync(path.join(this.dataDir, 'update'), { recursive: true, force: true }); } catch (e) { this.log(e); }
     this.ensureCore();
     this.reload();
     await this.finishInterruptedDeep();

@@ -244,3 +244,14 @@ test('способ, который подключили, запоминаетс�
   assert.strictEqual(c.d.strategy, c.strategies[7].file);
   assert.deepStrictEqual(Object.keys(c.d.results), [c.strategies[7].file]);
 });
+
+test('занятая папка обновления не мешает запуску: установщик ещё работает после перезапуска', async () => {
+  const rm = fs.rmSync;
+  fs.rmSync = (p, ...a) => { if (String(p).endsWith(`${path.sep}update`)) throw Object.assign(new Error('EPERM, Permission denied'), { code: 'EPERM' }); return rm(p, ...a); };
+  try {
+    const { c } = await make({ perfect: true });
+    assert.ok(c.strategies.length > 0);
+  } finally {
+    fs.rmSync = rm;
+  }
+});

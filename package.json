@@ -1,7 +1,7 @@
 {
   "name": "zapret-app",
   "productName": "zapret",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "coreVersion": "1.10.4",
   "zapretRepo": "Arkadiy2009/zapret-app",
   "repository": "github:Arkadiy2009/zapret-app",
@@ -55,7 +55,7 @@
       "runAsNode": false,
       "enableNodeOptionsEnvironmentVariable": false,
       "enableNodeCliInspectArguments": false,
-      "grantFileProtocolExtraPrivileges": false,
+      "grantFileProtocolExtraPrivileges": true,
       "enableCookieEncryption": true,
       "onlyLoadAppFromAsar": true,
       "enableEmbeddedAsarIntegrityValidation": true

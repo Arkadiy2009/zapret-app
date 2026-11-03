@@ -14,7 +14,8 @@ const log = e => { try { fs.appendFileSync(LOG_FILE, `${new Date().toISOString()
 
 const DONATE_URL = 'https://www.donationalerts.com/r/dOne';
 const WISH_URL = 'https://github.com/Arkadiy2009/zapret-app/discussions/1';
-let win = null, tray = null, ctrl = null, quitting = false;
+const RELEASES_URL = 'https://github.com/Arkadiy2009/zapret-app/releases/latest';
+let win = null, tray = null, ctrl = null, quitting = false, uiAlive = false, uiRescue = false;
 const trayIcon = name => nativeImage.createFromPath(path.join(ROOT, 'src', 'renderer', 'img', name));
 
 function createWindow() {
@@ -28,6 +29,36 @@ function createWindow() {
   win.on('close', e => { if (!quitting) { e.preventDefault(); win.hide(); } });
   win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   win.webContents.on('will-navigate', e => e.preventDefault());
+  // Если интерфейс не загрузился, человек не должен остаться с пустым окном: обновиться можно и без него
+  win.webContents.on('did-finish-load', () => setTimeout(() => { if (!uiAlive) rescue('окно загрузилось, но интерфейс не ответил').catch(log); }, 15000));
+  win.webContents.on('did-fail-load', (_, code, text) => rescue(`окно не загрузилось: ${code} ${text}`).catch(log));
+  win.webContents.on('render-process-gone', (_, d) => rescue(`процесс окна завершился: ${d.reason}`).catch(log));
+}
+
+async function rescue(reason) {
+  log(new Error(`Интерфейс не работает: ${reason}`));
+  if (uiRescue || quitting) return;
+  uiRescue = true;
+  await ctrl.checkUpdate(false).catch(log);
+  const next = ctrl.v.appUpdate?.state === 'ask' ? ctrl.v.appUpdate.v : null;
+  const { response } = await dialog.showMessageBox({
+    type: 'warning', title: 'zapret', noLink: true, defaultId: 0, cancelId: 2,
+    message: 'Окно приложения не загрузилось',
+    detail: `Обход продолжает работать.${next ? ` Вышла версия ${next}, она может это исправить.` : ''} Журнал: ${LOG_FILE}`,
+    buttons: [next ? `Установить ${next}` : 'Открыть страницу загрузки', 'Перезагрузить окно', 'Закрыть'],
+  });
+  if (response === 0) next ? ctrl.updateAll().catch(log) : shell.openExternal(RELEASES_URL);
+  if (response === 1) { uiRescue = false; win?.reload(); }
+}
+
+// Обновление из трея работает, даже если окно не открывается
+async function trayUpdate() {
+  await ctrl.checkUpdate(false).catch(log);
+  const a = ctrl.v.appUpdate, u = ctrl.v.update;
+  const what = [a?.state === 'ask' && `приложение ${a.v}`, u?.state === 'ask' && `zapret ${u.v}`].filter(Boolean);
+  if (!what.length) return dialog.showMessageBox({ type: 'info', title: 'zapret', message: 'У вас последняя версия', noLink: true });
+  const { response } = await dialog.showMessageBox({ type: 'question', title: 'zapret', noLink: true, buttons: ['Обновить', 'Позже'], cancelId: 1, message: `Есть обновление: ${what.join(' и ')}`, detail: 'Списки и настройки сохранятся.' });
+  if (response === 0) ctrl.updateAll().catch(e => toastError(e));
 }
 
 function refreshTray() {
@@ -38,6 +69,7 @@ function refreshTray() {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Открыть', click: () => { win.show(); win.focus(); } },
     { label: on ? 'Отключить' : 'Подключить', enabled: ctrl.v.conn !== 'scan', click: () => ctrl.primary().catch(e => toastError(e)) },
+    { label: ctrl.v.appUpdate?.state === 'ask' ? `Обновить до ${ctrl.v.appUpdate.v}` : 'Проверить обновления', click: () => trayUpdate().catch(log) },
     { type: 'separator' },
     { label: 'Выйти', click: () => { quitting = true; app.quit(); } },
   ]));
@@ -49,7 +81,7 @@ const ACTIONS = new Set(['primary', 'startScan', 'cancelScan', 'useStrategy', 't
   'finishOnboarding', 'defender', 'runDiag', 'fixConflicts', 'discordCache', 'netReset', 'remove', 'enableDns', 'disableDns', 'checkUpdate', 'updateAll', 'ipsetUpdate', 'hostsUpdate']);
 
 function bindIpc() {
-  ipcMain.handle('state', () => ctrl.snapshot());
+  ipcMain.handle('state', () => { uiAlive = true; return ctrl.snapshot(); });
   ipcMain.handle('call', async (_, name, ...args) => {
     if (!ACTIONS.has(name)) return { error: 'Неизвестное действие' };
     try {

@@ -227,3 +227,10 @@ test('оболочка: подменённый установщик удаляе
   await assert.rejects(update.downloadApp({ url: 'x', size: body.length, sha256: '0'.repeat(64) }, dir, undefined, net), /не совпала/);
   assert.ok(!fs.existsSync(file));
 });
+
+test('сборка: страница грузит свои файлы из app.asar', () => {
+  // Без этого режима Electron не отдаёт странице file:// внутри архива, и окно остаётся пустым (так сломалась 1.2.1)
+  const fuses = require('../package.json').build.electronFuses;
+  assert.notStrictEqual(fuses.grantFileProtocolExtraPrivileges, false);
+  assert.strictEqual(fuses.runAsNode, false);
+});
