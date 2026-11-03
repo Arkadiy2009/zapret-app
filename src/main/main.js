@@ -1,7 +1,9 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, nativeImage, shell, dialog } = require('electron');
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
 const { Controller } = require('./controller');
+const { buildReport } = require('./report');
 
 const MOCK = !app.isPackaged && process.argv.includes('--mock');
 const ROOT = path.join(__dirname, '..', '..');
@@ -10,7 +12,30 @@ const BUNDLED_CORE = app.isPackaged ? path.join(process.resourcesPath, 'core') :
 const LOG_FILE = path.join(DATA_DIR, 'zapret-app.log');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
-const log = e => { try { fs.appendFileSync(LOG_FILE, `${new Date().toISOString()} ${e && e.stack || e}\n`); } catch { /* журнал не критичен */ } };
+// Журнал ведётся всегда: в нём версии, подключения, подбор и ошибки. Больше 1 МБ уходит в .old
+const log = e => {
+  try {
+    if (fs.existsSync(LOG_FILE) && fs.statSync(LOG_FILE).size > 1024 * 1024) fs.renameSync(LOG_FILE, `${LOG_FILE}.old`);
+    fs.appendFileSync(LOG_FILE, `${new Date().toISOString()} ${e && e.stack || e}\n`);
+  } catch { /* журнал не критичен */ }
+};
+
+// Файл для разработчика на рабочем столе: сводка настроек и хвост журнала
+async function saveReport() {
+  const read = f => { try { return fs.readFileSync(f, 'utf8'); } catch { return ''; } };
+  const logText = (read(`${LOG_FILE}.old`) + read(LOG_FILE)).split('\n').slice(-400).join('\n');
+  const service = await ctrl.engine.serviceState().catch(() => 'неизвестно');
+  const text = buildReport({ snap: ctrl.snapshot(), service, logText });
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-');
+  const name = `zapret-журнал-${stamp}.txt`;
+  let file = null;
+  for (const dir of MOCK ? [DATA_DIR] : [app.getPath('desktop'), app.getPath('documents'), DATA_DIR]) {
+    try { file = path.join(dir, name); fs.writeFileSync(file, '\ufeff' + text); break; } catch { file = null; }
+  }
+  if (!file) throw new Error('Не удалось сохранить журнал');
+  shell.showItemInFolder(file);
+  return file;
+}
 
 const DONATE_URL = 'https://www.donationalerts.com/r/dOne';
 const WISH_URL = 'https://github.com/Arkadiy2009/zapret-app/discussions/1';
@@ -82,6 +107,7 @@ const ACTIONS = new Set(['primary', 'startScan', 'cancelScan', 'useStrategy', 't
 
 function bindIpc() {
   ipcMain.handle('state', () => { uiAlive = true; return ctrl.snapshot(); });
+  ipcMain.handle('saveLog', async () => { try { return { file: await saveReport() }; } catch (e) { log(e); return { error: e.message }; } });
   ipcMain.handle('call', async (_, name, ...args) => {
     if (!ACTIONS.has(name)) return { error: 'Неизвестное действие' };
     try {
@@ -94,7 +120,7 @@ function bindIpc() {
   ipcMain.on('win', (_, what) => {
     if (what === 'min') win.minimize();
     if (what === 'hide') win.hide();
-    if (what === 'log') shell.showItemInFolder(LOG_FILE);
+    if (what === 'log') { log('Открыта папка журнала'); shell.showItemInFolder(LOG_FILE); }
     if (what === 'donate') shell.openExternal(DONATE_URL);
     if (what === 'wish') shell.openExternal(WISH_URL);
   });
@@ -120,6 +146,7 @@ async function boot() {
     engine = require('./engine');
     updater = require('./update');
   }
+  log(`Запуск: приложение ${app.getVersion()}, Windows ${os.release()}, данные ${DATA_DIR}`);
   ctrl = new Controller({ dataDir: DATA_DIR, bundledCore: BUNDLED_CORE, engine, updater, log, appVersion: app.getVersion() });
   ctrl.on('quit', () => { quitting = true; app.quit(); });
   ctrl.on('state', s => { win?.webContents.send('state', s); refreshTray(); });

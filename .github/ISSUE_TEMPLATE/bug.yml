@@ -1,0 +1,31 @@
+name: Что-то не работает
+description: Обход не включается, сайт или игра не открываются, приложение ведёт себя странно
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо, что написали. Без журнала почти невозможно понять, что пошло не так, поэтому сначала сохраните его:
+        **«Настройки» → «Журнал для разработчика» → «Сохранить на рабочий стол»**.
+        Если окно не открывается, возьмите файл `C:\ProgramData\zapret\zapret-app.log` (вставьте путь в адресную строку проводника).
+  - type: textarea
+    id: what
+    attributes:
+      label: Что не работает
+      description: Что вы делали, что ожидали и что получилось
+      placeholder: Например, YouTube открывается, а Discord висит на подключении
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Журнал
+      description: Перетащите сюда файл zapret-журнал-....txt с рабочего стола
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Версия приложения
+      description: Видна в «Настройки» → «О приложении»
+      placeholder: 1.2.3

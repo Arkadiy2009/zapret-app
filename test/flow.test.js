@@ -255,3 +255,19 @@ test('занятая папка обновления не мешает запу�
     fs.rmSync = rm;
   }
 });
+
+test('журнал для разработчика: настройки, результаты подбора и записи журнала', async () => {
+  const lines = [];
+  const { c } = await make({ perfect: true });
+  c.log = m => lines.push(String(m));
+  await c.startScan({});
+  c.addCatalog('wardogs');
+  const { buildReport } = require('../src/main/report');
+  const text = buildReport({ snap: c.snapshot(), service: 'running', logText: lines.join('\n') });
+  assert.match(text, /Приложение: 0\.0\.0, запрет: 1\.10\.4/);
+  assert.match(text, /Каталог: wardogs/);
+  assert.match(text, /Режим для игр: all/);
+  assert.match(text, /YouTube \(отмечено, отвечают 12 из 12\)/);
+  assert.match(text, /Подключено: general/);
+  assert.match(text, /Подбор: проверено 1, лучший general/);
+});

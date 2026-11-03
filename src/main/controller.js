@@ -154,6 +154,7 @@ class Controller extends EventEmitter {
       await this.engine.setServiceStart(this.d.autostart);
     }
     await this.engine.startService();
+    this.log(`Подключено: ${file}, служба ${state === 'none' || this.d.serviceBin !== bin ? 'поставлена заново' : 'запущена'}`);
     Object.assign(this.d, { strategy: file, wasConnected: true, lastGood: [file, ...this.d.lastGood.filter(f => f !== file)].slice(0, 5) });
     Object.assign(this.v, { conn: 'on', scan: null, startedAt: Date.now(), lastCheck: Date.now(), banner: null, installed: true });
     this.healthFails = 0;
@@ -237,6 +238,7 @@ class Controller extends EventEmitter {
       return this.emit('open', 'dns');
     }
     const best = deep ? this.bestDeep(res) : scan.bestOf(res, ids);
+    this.log(`Подбор${deep ? ' (глубокий)' : ''}: проверено ${Object.keys(res).length}, лучший ${best || 'нет'}${best && !deep ? `, ${JSON.stringify(res[best].targets)}` : ''}`);
     if (!best) {
       this.v.banner = { kind: 'warn', text: 'Обход не запустился ни одним способом. Откройте «Проверку».' };
       return;
@@ -498,6 +500,7 @@ class Controller extends EventEmitter {
         a.pct = pct;
         this.push();
       });
+      this.log(`Ставим приложение ${a.v}`);
       this.updater.installApp(file);
       this.emit('quit');
     } catch (e) {
@@ -558,6 +561,7 @@ class Controller extends EventEmitter {
         }
       }
       this.cleanupCores();
+      this.log(`Запрет обновлён: ${before} -> ${next.version}`);
       u.state = 'done';
       this.v.lastUpdatedTo = next.version;
       this.save();
@@ -578,6 +582,7 @@ class Controller extends EventEmitter {
   }
 
   async rollback(version, strategy) {
+    this.log(`Откат запрета на ${version}`);
     Object.assign(this.d, { core: version, serviceBin: null, strategy });
     this.v.update = null;
     this.reload();
@@ -620,6 +625,7 @@ class Controller extends EventEmitter {
     }
     this.v.lastCheck = Date.now();
     this.healthFails = broken ? this.healthFails + 1 : 0;
+    if (broken) this.log(`Проверка доступа: ${broken} не открывается (${this.healthFails} раз подряд)`);
     if (this.healthFails < 2) return this.push();
     this.healthFails = 0;
     const name = this.targets().find(t => t.id === broken)?.name || 'Цель';

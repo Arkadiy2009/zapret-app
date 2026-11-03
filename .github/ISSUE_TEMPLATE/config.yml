@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Предложить игру или сервис для каталога
+    url: https://github.com/Arkadiy2009/zapret-app/discussions/1
+    about: Пожелания для каталога собираем в отдельной теме
+  - name: Уязвимость
+    url: https://github.com/Arkadiy2009/zapret-app/security/advisories/new
+    about: О проблемах безопасности пишите закрыто

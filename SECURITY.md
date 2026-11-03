@@ -11,11 +11,11 @@
 - Скачивайте его только со [страницы релизов](https://github.com/Arkadiy2009/zapret-app/releases). Копии на других сайтах могут быть подделкой.
 - Сверьте SHA256 файла с суммой на странице релиза:
   ```powershell
-  Get-FileHash .\zapret-setup-1.2.2.exe -Algorithm SHA256
+  Get-FileHash .\zapret-setup-1.2.3.exe -Algorithm SHA256
   ```
 - Убедитесь, что файл собран на GitHub Actions из этого репозитория:
   ```powershell
-  gh attestation verify .\zapret-setup-1.2.2.exe -R Arkadiy2009/zapret-app
+  gh attestation verify .\zapret-setup-1.2.3.exe -R Arkadiy2009/zapret-app
   ```
 
 ## Как устроена защита
